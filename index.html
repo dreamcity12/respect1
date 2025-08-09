@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>لعبة سين جيم - قائمة البداية</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#ffd166;--muted:#9aa4b2}
+    *{box-sizing:border-box;font-family:Tahoma,Arial,Helvetica,sans-serif}
+    body{margin:0;background:linear-gradient(180deg,#071029 0%,#071423 100%);color:#e6eef6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .container{width:980px;max-width:100%;background:rgba(255,255,255,0.03);border-radius:12px;padding:20px;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+    h1{text-align:center;margin:6px 0 18px;font-size:22px}
+    .menu{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+    .card{background:var(--card);padding:14px;border-radius:10px}
+    label{display:block;margin-bottom:6px;color:var(--muted);font-size:13px}
+    input[type=text]{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
+    .controls{display:flex;gap:10px;justify-content:center;margin-top:10px}
+    button{background:var(--accent);border:none;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:600}
+    .game{display:none;gap:12px;margin-top:16px}
+    .header-game{display:flex;justify-content:space-between;align-items:center}
+    .team{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;min-width:160px;text-align:center}
+    .team h3{margin:6px 0;font-size:16px}
+    .score{font-size:22px;font-weight:800;color:var(--accent)}
+    .board{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+    .cell{background:linear-gradient(180deg,#0b1220,#051020);padding:14px;border-radius:8px;text-align:center;cursor:pointer}
+    .cell.disabled{opacity:0.28;pointer-events:none}
+    .points{font-size:18px;font-weight:800}
+    .modal{position:fixed;inset:0;background:rgba(1,3,7,0.6);display:none;align-items:center;justify-content:center}
+    .modal .box{background:#071423;padding:20px;border-radius:10px;width:540px;max-width:95%}
+    .question{white-space:pre-wrap}
+    .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+    .small{font-size:13px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>لعبة شبيهة بسين جيم — ابدأ هنا</h1>
+
+    <div id="startScreen">
+      <div class="menu">
+        <div class="card">
+          <label>اسم الفريق الأول</label>
+          <input id="teamA" type="text" placeholder="اكتب اسم الفريق الأول..." />
+        </div>
+        <div class="card">
+          <label>اسم الفريق الثاني</label>
+          <input id="teamB" type="text" placeholder="اكتب اسم الفريق الثاني..." />
+        </div>
+      </div>
+      <div style="text-align:center">
+        <button id="startBtn">ابدأ اللعبة</button>
+        <button id="loadSample" class="ghost">تحميل أسئلة عينة</button>
+      </div>
+      <p class="small" style="text-align:center;margin-top:12px">مجلد الصور: <code>images/</code> — مجلد الأسئلة (اختياري JSON): <code>questions/</code></p>
+    </div>
+
+    <div id="gameScreen" class="game">
+      <div class="header-game">
+        <div style="display:flex;gap:8px">
+          <div class="team">
+            <h3 id="nameA">فريق أ</h3>
+            <div class="score" id="scoreA">0</div>
+          </div>
+          <div class="team">
+            <h3 id="nameB">فريق ب</h3>
+            <div class="score" id="scoreB">0</div>
+          </div>
+        </div>
+        <div>
+          <button id="resetBtn" class="ghost">رجوع</button>
+        </div>
+      </div>
+
+      <div class="board" id="board">
+        <!-- خلايا النقاط تولد بالـJS -->
+      </div>
+
+      <p class="small">اضغط على أي خانة نقاط لعرض السؤال. بعد الإجابة اختر الفريق الفائز لإضافة النقاط.</p>
+    </div>
+  </div>
+
+  <!-- مودال السؤال -->
+  <div id="modal" class="modal">
+    <div class="box">
+      <h3 id="qValue">سؤال — <span id="qPoints">0</span> نقطة</h3>
+      <div id="qText" class="question">نص السؤال هنا</div>
+      <div style="margin-top:10px">
+        <input id="answerInput" type="text" placeholder="اكتب الإجابة الصحيحة (اختياري)" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit" />
+      </div>
+      <div class="actions">
+        <button id="correctA" class="ghost">أضف للنقاط — فريق A</button>
+        <button id="correctB">أضف للنقاط — فريق B</button>
+        <button id="closeModal" class="ghost">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // إعدادات أسئلة افتراضية (يمكن استبدالها بتحميل JSON من مجلد questions/)
+    const sampleQuestions = [
+      {value:200, text:'ما هو اسم أول حاكم لسيرفر ريسبكت؟'},
+      {value:400, text:'ما اسم اللعبة التي يعتبرها دربحه نقطة تحول؟'},
+      {value:600, text:'من هو دربحه؟ (اجابة مفتوحة)'}
+    ];
+
+    const boardValues = [200,400,600,200,400,600,200,400,600,200];
+
+    const startBtn = document.getElementById('startBtn');
+    const loadSample = document.getElementById('loadSample');
+    const teamAinput = document.getElementById('teamA');
+    const teamBinput = document.getElementById('teamB');
+    const startScreen = document.getElementById('startScreen');
+    const gameScreen = document.getElementById('gameScreen');
+    const nameA = document.getElementById('nameA');
+    const nameB = document.getElementById('nameB');
+    const scoreAel = document.getElementById('scoreA');
+    const scoreBel = document.getElementById('scoreB');
+    const board = document.getElementById('board');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const modal = document.getElementById('modal');
+    const qText = document.getElementById('qText');
+    const qPoints = document.getElementById('qPoints');
+    const qValue = document.getElementById('qValue');
+    const closeModal = document.getElementById('closeModal');
+    const correctA = document.getElementById('correctA');
+    const correctB = document.getElementById('correctB');
+    const answerInput = document.getElementById('answerInput');
+
+    let questions = [];
+    let currentCell = null;
+    let scores = {A:0,B:0};
+
+    function renderBoard(){
+      board.innerHTML = '';
+      for(let i=0;i<boardValues.length;i++){
+        const val = boardValues[i];
+        const cell = document.createElement('div');
+        cell.className='cell';
+        cell.dataset.idx = i;
+        cell.innerHTML = `<div class="points">${val}</div>`;
+        cell.addEventListener('click',()=>openQuestion(i));
+        board.appendChild(cell);
+      }
+    }
+
+    function openQuestion(idx){
+      currentCell = board.children[idx];
+      const q = (questions[idx] || {text:'سؤال افتراضي', value: boardValues[idx]});
+      qText.textContent = q.text;
+      qPoints.textContent = q.value || boardValues[idx];
+      modal.style.display = 'flex';
+    }
+
+    function closeQ(){
+      modal.style.display = 'none';
+      answerInput.value='';
+    }
+
+    correctA.addEventListener('click',()=>applyScore('A'));
+    correctB.addEventListener('click',()=>applyScore('B'));
+    closeModal.addEventListener('click',closeQ);
+
+    function applyScore(team){
+      const pts = Number(qPoints.textContent)||0;
+      scores[team] += pts;
+      scoreAel.textContent = scores.A;
+      scoreBel.textContent = scores.B;
+      // وضع علامة أن الخانة مستخدمة
+      if(currentCell) currentCell.classList.add('disabled');
+      closeQ();
+    }
+
+    startBtn.addEventListener('click',()=>{
+      const a = teamAinput.value.trim()||'فريق A';
+      const b = teamBinput.value.trim()||'فريق B';
+      nameA.textContent = a; nameB.textContent = b;
+      scores = {A:0,B:0}; scoreAel.textContent='0'; scoreBel.textContent='0';
+      startScreen.style.display='none'; gameScreen.style.display='block';
+      renderBoard();
+    });
+
+    resetBtn.addEventListener('click',()=>{
+      // إعادة إلى شاشة البداية
+      startScreen.style.display='block'; gameScreen.style.display='none';
+    });
+
+    loadSample.addEventListener('click',()=>{
+      // تحميل أسئلة عينة إلى المصفوفة (تطابق طول boardValues)
+      questions = boardValues.map((v,i)=> (sampleQuestions[i]||{value:v,text:`سؤال عينة ${i+1}`}) );
+      alert('تم تحميل أسئلة عينة — الآن اضغط ابدأ');
+    });
+
+    // مفيد لو حبيت تحميل JSON من مجلد questions/ باستخدام fetch
+    // (لتشغيل محلي ضع السيرفر أو استخدم Live Server في VSCode)
+    async function loadQuestionsFrom(url){
+      try{
+        const res = await fetch(url);
+        const data = await res.json();
+        questions = data;
+        alert('تم تحميل الأسئلة من '+url);
+      }catch(e){console.warn(e);alert('فشل تحميل الأسئلة. تأكد من تشغيل سيرفر محلي أو أن المسار صحيح.');}
+    }
+
+    // ملاحظة: لتشغيل كامل الميزات على جهازك المحلي افتح index.html عبر سيرفر (مثلاً Live Server) لأن بعض المتصفحات تحظر fetch من ملفات محلية.
+  </script>
+</body>
+</html>

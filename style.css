@@ -1,0 +1,101 @@
+body {
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    text-align: center;
+    direction: rtl; /* لدعم اللغة العربية */
+}
+
+.game-container {
+    width: 90%;
+    max-width: 600px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.game-screen {
+    display: none;
+}
+
+.game-screen.active {
+    display: block;
+}
+
+#start-screen h1, #end-screen h1 {
+    color: #333;
+}
+
+#start-btn, #restart-btn, #save-teams-btn, .btn, .point-btn {
+    font-size: 1.2rem;
+    padding: 10px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: #fff;
+}
+
+#teams-screen input {
+    display: block;
+    width: 80%;
+    margin: 10px auto;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.score-board {
+    display: flex;
+    justify-content: space-around;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.points-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+}
+
+.point-btn {
+    background-color: #007bff;
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 20px 10px;
+}
+
+.btn-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.btn.correct {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.btn.wrong {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+#next-btn.hide {
+    display: none;
+}
